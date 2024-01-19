@@ -41,7 +41,7 @@ class User(BaseModel, Base):
     passwordToken = Column(String,  nullable=True)
     passwordTokenExpires = Column(TIMESTAMP(timezone=True), nullable=True)
     role = Column(Enum("admin", "user", name="role_types"), nullable=False, default="user")
-    
+    tasks = relationship('Task', back_populates='user')
     
     @classmethod
     def before_update_listener(cls, mapper, connection, target):
@@ -80,7 +80,7 @@ class Task(BaseModel,Base):
     completed = Column(Boolean,  nullable=False, default=False)
     user_id = Column(String, ForeignKey('users.id',ondelete="CASCADE"), nullable=False)
     
-    user = relationship("User", back_populates="tasks")
+    user = relationship('User', back_populates='tasks')
     @classmethod
     def before_update_listener(cls, mapper, connection, target):
         BaseModel.before_update_listener(mapper, connection, target)

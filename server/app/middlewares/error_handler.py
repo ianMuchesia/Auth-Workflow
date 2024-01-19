@@ -18,18 +18,18 @@ async def validation_exception_handler(request:Request, exc:RequestValidationErr
         if detail[0]['type'] == 'missing':
             return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content={"msg":"Missing required fields"},
+        content={"detail":"Missing required fields"},
         )
         if detail[0]['loc'][1] == 'token':        
             return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"msg":"Not authenticated"},
+        content={"detail":"Not authenticated"},
         )
      
     except:
         return JSONResponse(
         status_code=HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"msg":detail[0]['msg']},
+        content={"detail":detail[0]['detail']},
         )
         
         
@@ -40,5 +40,5 @@ def integrity_error_handler(request: Request, exc: IntegrityError):
 
     return JSONResponse(
         status_code=400,  # Bad Request Error
-        content={"msg": "Database Integrity Error"},
+        content={"detail": "Database Integrity Error"},
     )

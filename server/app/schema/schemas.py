@@ -15,8 +15,13 @@ class UserCreate(UserBase):
     name: str
     email: EmailStr
     phone: str
-    role:Optional[str] = "user" 
+    role:Optional[str] = "user"
+    verificationToken: Optional[str] = None 
     
+    
+class UserVerify(BaseModel):
+    email: EmailStr
+    verificationToken: str
     
 class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes = True)
@@ -25,3 +30,8 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     role:str
+    
+    
+class UserLogin(BaseModel):
+    email:EmailStr
+    password:str

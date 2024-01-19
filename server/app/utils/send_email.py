@@ -29,4 +29,5 @@ async def send_email(email:str,subject:str,html:str):
 
     fm = FastMail(conf)
     await fm.send_message(message)
+    return None
     # return JSONResponse(status_code=200, content={"message": "email has been sent"})
