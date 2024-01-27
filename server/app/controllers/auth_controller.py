@@ -99,7 +99,7 @@ def login_user(req: Request, res: Response,user:User, db:Session):
     
     
     if existing_token:
-        print("we are here in existing token")
+        
         if not existing_token.isValid:
             raise errors.UnauthorizedError("Invalid Credentials")
         
@@ -131,9 +131,10 @@ def login_user(req: Request, res: Response,user:User, db:Session):
         db.add(user_token)
         db.commit()
         
-        jwt.attach_cookies_to_response(req,res,token_user,refresh_token)
+        response = JSONResponse(status_code=200, content={"user":token_user})
+        jwt.attach_cookies_to_response(req,response,token_user,refresh_token)
         
-        return JSONResponse(status_code=200, content={"user":token_user})
+        return response
         
         
 def logout_user(res:Response,db:Session, user):

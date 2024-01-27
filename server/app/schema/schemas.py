@@ -43,3 +43,13 @@ class UserResetPassword(BaseModel):
     password:str
     passwordToken:str
     email:EmailStr
+    
+    
+class UserUpdate(BaseModel):
+    name: str
+    email: EmailStr
+   
+    
+class UserUpdatePassword(BaseModel):
+    old_password:str
+    new_password:str

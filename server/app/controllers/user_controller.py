@@ -9,9 +9,9 @@ from starlette.responses import JSONResponse
 
 
 
-def update_user(user:User, db:Session,req:Request):
+def update_user(user:User,userId:str, db:Session,req:Request):
 
-    user_exists = db.query(User).filter(User.email == user.email).first()
+    user_exists = db.query(User).filter(User.id == userId).first()
     
     if not user_exists:
         raise errors.NotFoundError("User not found")
@@ -31,8 +31,8 @@ def update_user(user:User, db:Session,req:Request):
     return response
 
 
-def update_user_password(user:User,old_password,new_password,db:Session):
-    user_exists = db.query(User).filter(User.email == user.email).first()
+def update_user_password(userId:str,old_password,new_password,db:Session):
+    user_exists = db.query(User).filter(User.id == userId).first()
     
     if not user_exists:
         raise errors.NotFoundError("User not found")
