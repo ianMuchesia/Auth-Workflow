@@ -21,13 +21,16 @@ conf = ConnectionConfig(
 
 async def send_email(email:str,subject:str,html:str):
     
-    message = MessageSchema(
+    try:
+        message = MessageSchema(
         subject=subject,
         recipients=[email],
         body=html,
         subtype=MessageType.html)
 
-    fm = FastMail(conf)
-    await fm.send_message(message)
-    return None
+        fm = FastMail(conf)
+        await fm.send_message(message)
+        return None
     # return JSONResponse(status_code=200, content={"message": "email has been sent"})
+    except:
+        return JSONResponse(status_code=500, content={"message": "Error connecting to the email server. Please try again later."})

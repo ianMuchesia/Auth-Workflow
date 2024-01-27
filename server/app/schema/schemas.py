@@ -35,3 +35,11 @@ class UserResponse(UserBase):
 class UserLogin(BaseModel):
     email:EmailStr
     password:str
+    
+class UserForgotPassword(BaseModel):
+    email:EmailStr
+    
+class UserResetPassword(BaseModel):
+    password:str
+    passwordToken:str
+    email:EmailStr

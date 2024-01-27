@@ -8,7 +8,7 @@ async def send_reset_password_email(name:str, email:str, token:str,origin:str):
         <body>
             <p>Hi {name},</p><br>
             <p>Click the link below to reset your password</p><br>
-            <a href="{reset_url}">Reset Password</a>
+            <a href="{reset_url}" style="color:blue">Reset Password Here</a>
         </body>
     </html>
     

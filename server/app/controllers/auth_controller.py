@@ -1,5 +1,7 @@
 import secrets
 from fastapi import Request,Response
+from pytz import utc
+
 from ..models.models import User,Token
 from sqlalchemy.orm import Session
 from ..errors import errors
@@ -102,8 +104,12 @@ def login_user(req: Request, res: Response,user:User, db:Session):
             raise errors.UnauthorizedError("Invalid Credentials")
         
         refresh_token = existing_token.refreshToken
-        jwt.attach_cookies_to_response(req, res,token_user,refresh_token)
-        return JSONResponse(status_code=200,content={"user":token_user})
+        
+        response = JSONResponse(status_code=200, content={"user":token_user})
+
+        
+        jwt.attach_cookies_to_response(req, response, token_user, refresh_token)
+        return response
     else:
         print("we are here the new token is created ")
         refresh_token = secrets.token_hex(40)
@@ -130,26 +136,31 @@ def login_user(req: Request, res: Response,user:User, db:Session):
         return JSONResponse(status_code=200, content={"user":token_user})
         
         
-def logout_user(req:Request,res:Response,db:Session, user:User):
+def logout_user(res:Response,db:Session, user):
     
     #delete the token from the database
-    db_token = db.query(Token).filter(Token.user == user.id).first()
+    print(user)
+    db_token = db.query(Token).filter(Token.user == user["userId"]).first()
     
+    if not db_token:
+        raise errors.NotFoundError("Token not found")
     db.delete(db_token)
     
     db.commit()
     
+    response = JSONResponse(status_code=200,content={"message":"Logged out successfully"})
     #delete the cookies
-    res.delete_cookie("accessToken")
-    res.delete_cookie("refreshToken")
+    response.delete_cookie("accessToken")
+    response.delete_cookie("refreshToken")
+
     
-    return JSONResponse(status_code=200,content={"message":"Logged out successfully"})
+    return response
 
 
 
-async def forgot_password (req:Request,user:User,db:Session):
+async def forgot_password (req:Request,email:str,db:Session):
     
-    db_user = db.query(User).filter(User.email == user.email).first()
+    db_user = db.query(User).filter(User.email == email).first()
     
     if not db_user:
         raise errors.NotFoundError("User not found")
@@ -161,12 +172,18 @@ async def forgot_password (req:Request,user:User,db:Session):
     token = secrets.token_hex(70)
 
     origin = req.headers.get("origin")
+    if not origin:
+        raise errors.BadRequestError("Origin not found")
     #send the email
+    print(origin)
     await send_reset_password.send_reset_password_email(name=db_user.name,email=db_user.email,token=token,origin=origin)
         
-    ten_minutes = datetime.utcnow() + timedelta(minutes=10)
+    # ten_minutes = datetime.utcnow() + timedelta(minutes=10)
     
-    password_expiration_date = datetime.utcnow() + ten_minutes
+    # password_expiration_date = datetime.utcnow() + ten_minutes
+    
+    ten_minutes = timedelta(minutes=10)
+    password_expiration_date = datetime.utcnow().replace(tzinfo=utc) + ten_minutes
     
     #save the token in the database
     db_user.passwordToken = create_hash.hash_string(token)
@@ -175,7 +192,7 @@ async def forgot_password (req:Request,user:User,db:Session):
     db.commit()
     db.refresh(db_user)
     
-    return JSONResponse(status_code=200,content={"message":"Reset token created successfully"})
+    return JSONResponse(status_code=201,content={"message":"Reset token created successfully"})
     
     
     
@@ -185,14 +202,21 @@ def reset_password(user:User,db:Session):
     if not db_user:
         raise errors.NotFoundError("User not found")
     
-    current_date = datetime.utcnow()
+     
+    current_date = datetime.utcnow().replace(tzinfo=utc)
     
+  
+    print(db_user.passwordTokenExpires)
     if current_date > db_user.passwordTokenExpires:
         raise errors.UnauthorizedError("Token expired")
+    
     if not db_user.isVerified:
         raise errors.UnauthorizedError("Email not verified")
+    
+    
     if db_user.passwordToken != create_hash.hash_string(user.passwordToken):
         raise errors.UnauthorizedError("Invalid Credentials")
+    
     
     hashed_password = hash.hash_password(user.password)
     
@@ -201,5 +225,5 @@ def reset_password(user:User,db:Session):
     db.commit()
     db.refresh(db_user)
     
-    return JSONResponse(status_code=200,content={"message":"Password reset successfully"})
+    return JSONResponse(status_code=201,content={"message":"Password reset successfully"})
    
